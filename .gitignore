@@ -11,6 +11,7 @@
 bin/
 build/
 .claude/
+
 # ===================
 # IDE / Editor
 # ===================
@@ -30,3 +31,4 @@ build/
 # OS files
 # ===================
 Thumbs.db
+.gitignore
