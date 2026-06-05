@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Language-C-blue.svg" alt="Language: C">
   <img src="https://img.shields.io/badge/Standard-C99-green.svg" alt="Standard: C99">
   <img src="https://img.shields.io/badge/Compiler-GCC-yellow.svg" alt="Compiler: GCC">
-  <img src="https://img.shields.io/badge/Words-150%2B-orange.svg" alt="Words: 150+">
+  <img src="https://img.shields.io/badge/Words-300%2B-orange.svg" alt="Words: 300+">
 </p>
 
 <p align="center">
@@ -37,7 +37,7 @@
 | **Bahasa** | C (C99 Standard) |
 | **Platform** | Console/Terminal |
 | **Compiler** | GCC |
-| **Jumlah Kata** | 150+ pasang kata |
+| **Jumlah Kata** | 300+ pasang kata |
 | **Struktur Data** | 6 jenis |
 
 ---
@@ -74,6 +74,14 @@ Project ini mengimplementasikan 6 struktur data utama:
 | 5 | **Stack** | Operasi undo (LIFO) | O(1) |
 | 6 | **Queue** | Word of the day, proses bulk import | O(1) |
 
+### Optimasi Performa
+
+| Operasi | Sebelum | Sesudah | Peningkatan |
+|---------|---------|---------|-------------|
+| Trie Update | O(n) full rebuild | O(k) incremental | ~300x faster |
+| Trie Delete | O(n) full rebuild | O(k) incremental | ~300x faster |
+| Hash Delete | Memory leak | Safe | Fixed |
+
 ---
 
 ## 📁 Struktur File
@@ -89,9 +97,11 @@ indoeng-dictionary/
 │   ├── dictionary.c          # Logika utama dictionary manager
 │   ├── dictionary.h          # Header dictionary
 │   ├── data_structures.c     # Implementasi 6 struktur data
-│   ├── data_structures.h    # Deklarasi struktur data
-│   └── word_data.c           # Dataset 150+ kata
-├── bin/
+│   ├── data_structures.h     # Deklarasi struktur data
+│   ├── ui_utils.c            # Utilitas tampilan UI
+│   ├── ui_utils.h            # Header utilitas UI
+│   └── word_data.c           # Dataset 300+ kata
+├── build/
 │   └── indoeng-dictionary.exe # File executable
 └── .vscode/
     └── tasks.json            # Konfigurasi VS Code tasks
@@ -143,18 +153,18 @@ make run
 ╔══════════════════════════════════════════════════════════════╗
 ║         INDONESIAN - ENGLISH DICTIONARY (IndoEng)              ║
 ╠══════════════════════════════════════════════════════════════╣
-║  1. Search Word (Indonesian)        - Pencarian BST           ║
-║  2. Search Word (English)           - Pencarian Hash Table     ║
-║  3. Prefix Search (Autocomplete)    - Pencarian Trie          ║
-║  4. Add New Word                    - Tambah kata baru       ║
-║  5. Update Word                     - Update kata            ║
-║  6. Delete Word                      - Hapus kata             ║
-║  7. View All Words                   - Lihat semua kata      ║
-║  8. Word of the Day                  - Kata hari ini         ║
-║  9. Search History                   - Riwayat pencarian     ║
-║ 10. Undo Last Action                 - Batalkan terakhir     ║
-║ 11. Statistics                       - Statistik             ║
-║  0. Exit                             - Keluar                ║
+║  1. View All Words                     - Paginated A-Z        ║
+║  2. Search Word (Indonesian)           - BST Lookup           ║
+║  3. Search Word (English)              - Hash Table Lookup    ║
+║  4. Prefix Search (Autocomplete)       - Trie Lookup          ║
+║  5. Add New Word                       - Create               ║
+║  6. Update Word                        - Update               ║
+║  7. Delete Word                        - Delete               ║
+║  8. Word of the Day                    - Random Pick          ║
+║  9. Search History                     - Recent Searches      ║
+║ 10. Undo Last Action                   - Stack-based          ║
+║ 11. Statistics                         - Dictionary Stats     ║
+║  0. Exit                                                      ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
@@ -162,21 +172,21 @@ make run
 
 1. **Mencari kata Indonesia**
    ```
-   Pilih menu: 1
+   Pilih menu: 2
    Masukkan kata Indonesia: rumah
    ```
    Hasil: Menampilkan informasi kata "rumah" menggunakan BST
 
 2. **Mencari kata Inggris**
    ```
-   Pilih menu: 2
+   Pilih menu: 3
    Masukkan kata Inggris: house
    ```
    Hasil: Menampilkan informasi kata "house" menggunakan Hash Table
 
 3. **Prefix Search (Autocomplete)**
    ```
-   Pilih menu: 3
+   Pilih menu: 4
    Masukkan prefix: rum
    ```
    Hasil: Menampilkan semua kata yang dimulai dengan "rum"
@@ -190,18 +200,18 @@ make run
 ╔══════════════════════════════════════════════════════════════╗
 ║         INDONESIAN - ENGLISH DICTIONARY (IndoEng)             ║
 ╠══════════════════════════════════════════════════════════════╣
-║  1. Search Word (Indonesian)                                 ║
-║  2. Search Word (English)                                     ║
-║  3. Prefix Search (Autocomplete)                             ║
-║  4. Add New Word                                              ║
-║  5. Update Word                                               ║
-║  6. Delete Word                                               ║
-║  7. View All Words                                            ║
-║  8. Word of the Day                                           ║
-║  9. Search History                                            ║
-║ 10. Undo Last Action                                          ║
-║ 11. Statistics                                                 ║
-║  0. Exit                                                       ║
+║  1. View All Words                                           ║
+║  2. Search Word (Indonesian) - BST Lookup                    ║
+║  3. Search Word (English)    - Hash Table Lookup             ║
+║  4. Prefix Search           - Trie Lookup                   ║
+║  5. Add New Word                                             ║
+║  6. Update Word                                              ║
+║  7. Delete Word                                              ║
+║  8. Word of the Day                                          ║
+║  9. Search History                                           ║
+║ 10. Undo Last Action                                         ║
+║ 11. Statistics                                               ║
+║  0. Exit                                                     ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
@@ -211,6 +221,19 @@ make run
 
 - [SPEC.md](./SPEC.md) - Spesifikasi teknis lengkap
 - [DOKUMENTASI_PRESENTASI.md](./DOKUMENTASI_PRESENTASI.md) - Dokumentasi untuk presentasi
+
+---
+
+## 🔄 Riwayat Perubahan
+
+### v1.1 (Refactoring)
+- ✅ Optimasi trie update/delete: O(n) → O(k)
+- ✅ Perbaikan memory leak pada hash_delete
+- ✅ Refaktor UI utilities: hapus ~200 baris kode duplikat
+- ✅ Penghapusan kode yang tidak digunakan
+
+### v1.0
+- Rilis awal dengan 6 struktur data
 
 ---
 

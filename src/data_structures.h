@@ -7,6 +7,20 @@
 #include <time.h>
 #include <ctype.h>
 
+// Warna untuk Terminal UI (ANSI Escape Codes)
+#define CLR_RED     "\x1b[1;31m"
+#define CLR_GREEN   "\x1b[1;32m"
+#define CLR_YELLOW  "\x1b[1;33m"
+#define CLR_BLUE    "\x1b[1;34m"
+#define CLR_MAGENTA "\x1b[1;35m"
+#define CLR_CYAN    "\x1b[1;36m"
+#define CLR_WHITE   "\x1b[1;37m"
+#define CLR_RESET   "\x1b[0m"
+#define CLR_BOLD    "\x1b[1m"
+
+// Case-insensitive string comparison mapping for Windows/POSIX strict C99 compliance
+int strcasecmp(const char *s1, const char *s2);
+
 // Konstanta ukuran
 #define MAX_WORD_LEN 100
 #define MAX_DEF_LEN 500
@@ -112,8 +126,10 @@ typedef struct TrieNode {
 
 TrieNode* trie_create_node(void);
 void trie_insert(TrieNode* root, const char* word, WordEntry entry);
+void trie_update(TrieNode* root, const char* old_word, const char* new_word, WordEntry entry);
 TrieNode* trie_search_prefix(TrieNode* root, const char* prefix);
 void trie_get_all_with_prefix(TrieNode* root, const char* prefix, WordEntry** results, int* count);
+void trie_delete_word(TrieNode* root, const char* word);
 void trie_destroy(TrieNode* root);
 
 // ============================================================================

@@ -3,13 +3,6 @@
 
 #include "data_structures.h"
 
-// Struct untuk undo action
-typedef struct {
-    char type[20];
-    char indonesian[MAX_WORD_LEN];
-    WordEntry word;
-} UndoAction;
-
 // Dictionary Manager
 typedef struct {
     BSTNode* bst_root;           // BST untuk lookup Indonesia
@@ -20,7 +13,6 @@ typedef struct {
     Queue* word_queue;           // Queue untuk word of the day
 
     int total_words;
-    int word_of_day_index;
     WordEntry last_searched;      // Kata terakhir yang dicari
     int has_last_searched;        // Flag apakah ada kata terakhir
 } DictionaryManager;

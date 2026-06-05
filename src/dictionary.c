@@ -17,14 +17,6 @@ static void collect_all_words(BSTNode* node, WordEntry** results, int* count) {
     collect_all_words(node->right, results, count);
 }
 
-// Rebuild Trie dari BST (setelah update/delete)
-static void rebuild_trie(TrieNode* trie_root, BSTNode* bst_root) {
-    if (bst_root == NULL) return;
-    trie_insert(trie_root, bst_root->word.indonesian, bst_root->word);
-    rebuild_trie(trie_root, bst_root->left);
-    rebuild_trie(trie_root, bst_root->right);
-}
-
 // Hitung statistik dari BST
 static void count_bst_stats(BSTNode* n, int* pos_count, int* cat_count) {
     if (n == NULL) return;
@@ -74,7 +66,6 @@ DictionaryManager* dict_create(void) {
     dict->word_queue = queue_create(1000);
 
     dict->total_words = 0;
-    dict->word_of_day_index = 0;
     dict->has_last_searched = 0;
     memset(&dict->last_searched, 0, sizeof(WordEntry));
 
@@ -140,12 +131,11 @@ int dict_update_word(DictionaryManager* dict, const char* indonesian, WordEntry 
     dict->bst_root = bst_delete(dict->bst_root, indonesian);
     dict->bst_root = bst_insert(dict->bst_root, new_word);
 
-    hash_delete(dict->hash_english, old_word.english);
+    hash_remove(dict->hash_english, old_word.english);
     hash_insert(dict->hash_english, new_word);
 
-    trie_destroy(dict->trie_root);
-    dict->trie_root = trie_create_node();
-    rebuild_trie(dict->trie_root, dict->bst_root);
+    // Update trie in-place instead of full rebuild
+    trie_update(dict->trie_root, old_word.indonesian, new_word.indonesian, new_word);
 
     // Push undo action - store marker with @UPDATE: prefix + old_word data
     WordEntry undo_marker = old_word;
@@ -172,11 +162,10 @@ int dict_delete_word(DictionaryManager* dict, const char* indonesian) {
     WordEntry deleted_word = node->word;
 
     dict->bst_root = bst_delete(dict->bst_root, indonesian);
-    hash_delete(dict->hash_english, deleted_word.english);
+    hash_remove(dict->hash_english, deleted_word.english);
 
-    trie_destroy(dict->trie_root);
-    dict->trie_root = trie_create_node();
-    rebuild_trie(dict->trie_root, dict->bst_root);
+    // Update trie in-place instead of full rebuild
+    trie_delete_word(dict->trie_root, deleted_word.indonesian);
 
     dict->total_words--;
 
@@ -204,11 +193,10 @@ int dict_delete_word_no_undo(DictionaryManager* dict, const char* indonesian) {
     WordEntry deleted_word = node->word;
 
     dict->bst_root = bst_delete(dict->bst_root, indonesian);
-    hash_delete(dict->hash_english, deleted_word.english);
+    hash_remove(dict->hash_english, deleted_word.english);
 
-    trie_destroy(dict->trie_root);
-    dict->trie_root = trie_create_node();
-    rebuild_trie(dict->trie_root, dict->bst_root);
+    // Update trie in-place instead of full rebuild
+    trie_delete_word(dict->trie_root, deleted_word.indonesian);
 
     dict->total_words--;
 
@@ -279,7 +267,7 @@ WordEntry* dict_get_last_searched(DictionaryManager* dict) {
 // Menampilkan semua kata dengan pagination dan filter alphabet
 void dict_view_all(DictionaryManager* dict) {
     if (dict == NULL || dict->total_words == 0) {
-        printf("\n  [Info] Dictionary kosong!\n");
+        printf("\n  " CLR_CYAN "[Info]" CLR_RESET " Dictionary kosong!\n");
         return;
     }
 
@@ -292,7 +280,7 @@ void dict_view_all(DictionaryManager* dict) {
 
     WordEntry* all_words = (WordEntry*)malloc(sizeof(WordEntry) * total_words);
     if (all_words == NULL) {
-        printf("\n  [Error] Gagal alokasi memori!\n");
+        printf("\n  " CLR_RED "[Error]" CLR_RESET " Gagal alokasi memori!\n");
         return;
     }
     int count = 0;
@@ -308,7 +296,7 @@ void dict_view_all(DictionaryManager* dict) {
         filtered_words = (WordEntry*)malloc(sizeof(WordEntry) * total_words);
         if (filtered_words == NULL) {
             free(all_words);
-            printf("\n  [Error] Gagal alokasi memori!\n");
+            printf("\n  " CLR_RED "[Error]" CLR_RESET " Gagal alokasi memori!\n");
             return;
         }
         filtered_count = 0;
@@ -361,17 +349,17 @@ void dict_view_all(DictionaryManager* dict) {
         int no_width = 4;
         int total_table_width = no_width + max_indonesian + max_english + max_pos + max_category + 9;
 
-        printf("  +");
+        printf(CLR_CYAN "  +");
         for (int i = 0; i < total_table_width; i++) printf("-");
         printf("+\n");
         printf("  |                         DAFTAR SEMUA KATA                           |\n");
         printf("  +");
         for (int i = 0; i < total_table_width; i++) printf("-");
         printf("+\n");
-        printf("  |  FILTER: ");
+        printf("  |  " CLR_BOLD CLR_YELLOW "FILTER: " CLR_RESET CLR_CYAN);
         for (int i = 'A'; i <= 'Z'; i++) {
             if (!show_all && i == selected_letter) {
-                printf("[*] ");
+                printf(CLR_BOLD CLR_YELLOW "[*] " CLR_RESET CLR_CYAN);
             } else {
                 printf("[%c] ", i);
             }
@@ -380,13 +368,13 @@ void dict_view_all(DictionaryManager* dict) {
         printf("\n");
         printf("  +");
         for (int i = 0; i < total_table_width; i++) printf("-");
-        printf("+\n");
+        printf("+\n" CLR_RESET);
 
-        printf("\n      Filter: %c      |      Halaman %d/%d      |      Total: %d kata\n",
+        printf("\n      Filter: " CLR_BOLD CLR_YELLOW "%c" CLR_RESET "      |      Halaman " CLR_BOLD CLR_YELLOW "%d/%d" CLR_RESET "      |      Total: " CLR_BOLD CLR_GREEN "%d" CLR_RESET " kata\n",
                show_all ? '*' : selected_letter, current_page, total_pages, filtered_count);
 
         // Header border - proportional with table content
-        printf("  +");
+        printf(CLR_CYAN "  +");
         for (int i = 0; i < no_width - 1; i++) printf("-");
         printf("+");
         for (int i = 0; i < max_indonesian + 2; i++) printf("-");
@@ -396,14 +384,14 @@ void dict_view_all(DictionaryManager* dict) {
         for (int i = 0; i < max_pos + 2; i++) printf("-");
         printf("+");
         for (int i = 0; i < max_category; i++) printf("-");
-        printf("+\n");
+        printf("+\n" CLR_RESET);
 
         // Table header row
-        printf("  %-4s | %-*s | %-*s | %-*s | %s\n",
+        printf("  " CLR_BOLD CLR_WHITE "%-4s" CLR_RESET CLR_CYAN " | " CLR_BOLD CLR_WHITE "%-*s" CLR_RESET CLR_CYAN " | " CLR_BOLD CLR_WHITE "%-*s" CLR_RESET CLR_CYAN " | " CLR_BOLD CLR_WHITE "%-*s" CLR_RESET CLR_CYAN " | " CLR_BOLD CLR_WHITE "%s" CLR_RESET "\n",
                "No.", max_indonesian, "Indonesian", max_english, "English", max_pos, "POS", "Category");
 
         // Header border (bottom)
-        printf("  +");
+        printf(CLR_CYAN "  +");
         for (int i = 0; i < no_width - 1; i++) printf("-");
         printf("+");
         for (int i = 0; i < max_indonesian + 2; i++) printf("-");
@@ -413,11 +401,11 @@ void dict_view_all(DictionaryManager* dict) {
         for (int i = 0; i < max_pos + 2; i++) printf("-");
         printf("+");
         for (int i = 0; i < max_category; i++) printf("-");
-        printf("+\n");
+        printf("+\n" CLR_RESET);
 
         // Data rows
         for (int i = start_idx; i < end_idx; i++) {
-            printf("  %-4d | %-*s | %-*s | %-*s | %s\n",
+            printf("  %-4d | " CLR_GREEN "%-*s" CLR_RESET " | " CLR_YELLOW "%-*s" CLR_RESET " | " CLR_MAGENTA "%-*s" CLR_RESET " | %s\n",
                    i + 1,
                    max_indonesian, filtered_words[i].indonesian,
                    max_english, filtered_words[i].english,
@@ -426,7 +414,7 @@ void dict_view_all(DictionaryManager* dict) {
         }
 
         // Footer border
-        printf("  +");
+        printf(CLR_CYAN "  +");
         for (int i = 0; i < no_width - 1; i++) printf("-");
         printf("+");
         for (int i = 0; i < max_indonesian + 2; i++) printf("-");
@@ -436,23 +424,26 @@ void dict_view_all(DictionaryManager* dict) {
         for (int i = 0; i < max_pos + 2; i++) printf("-");
         printf("+");
         for (int i = 0; i < max_category; i++) printf("-");
-        printf("+\n");
+        printf("+\n" CLR_RESET);
 
-        printf("\n  +");
+        printf("\n");
+        printf(CLR_CYAN "  +");
         for (int i = 0; i < total_table_width; i++) printf("-");
         printf("+\n");
-        printf("  |     [1-%d] Pilih Kata    |  [A-Z] Awalan  |  [/1-%d] Halaman      |\n", filtered_count, total_pages);
-        printf("  |     [0] Tampilkan Semua   |  [<] Menu Utama                          |\n");
+        printf("  |     [1-%d] Pilih Kata    |  [A-Z] Awalan   |  [/1-%d] Halaman      |\n", filtered_count, total_pages);
+        printf("  |     [0] Tampilkan Semua   |  [<] Menu Utama                         |\n");
         printf("  +");
         for (int i = 0; i < total_table_width; i++) printf("-");
-        printf("+\n");
-        printf("\n  Pilihan: ");
+        printf("+\n" CLR_RESET);
+        printf("\n  Pilihan: " CLR_BOLD CLR_YELLOW);
 
         if (fgets(input, sizeof(input), stdin) == NULL) {
+            printf(CLR_RESET);
             free(all_words);
             free(filtered_words);
             return;
         }
+        printf(CLR_RESET);
 
         input[strcspn(input, "\n")] = '\0';
 
@@ -463,7 +454,7 @@ void dict_view_all(DictionaryManager* dict) {
         char first_char = input[0];
 
         if (first_char == '<') {
-            printf("\n  [Info] Kembali ke menu utama.\n");
+            printf("\n  " CLR_CYAN "[Info]" CLR_RESET " Kembali ke menu utama.\n");
             break;
         }
 
@@ -472,7 +463,7 @@ void dict_view_all(DictionaryManager* dict) {
             if (page_num >= 1 && page_num <= total_pages) {
                 current_page = page_num;
             } else {
-                printf("\n  [Error] Halaman tidak valid. Pilih 1-%d\n", total_pages);
+                printf("\n  " CLR_RED "[Error]" CLR_RESET " Halaman tidak valid. Pilih 1-%d\n", total_pages);
             }
             continue;
         }
@@ -516,50 +507,50 @@ void dict_view_all(DictionaryManager* dict) {
                 int pad_right = box_width - title_len - pad_left;
 
                 printf("\n");
-                printf("  +");
+                printf(CLR_BLUE "  +");
                 for (int i = 0; i < box_width; i++) printf("-");
-                printf("+\n");
-                printf("  |%*sDETAIL KATA%*s|\n", pad_left, "", pad_right, "");
-                printf("  +");
+                printf("+\n" CLR_RESET);
+                printf(CLR_BLUE "  |" CLR_RESET "%*s" CLR_BOLD CLR_YELLOW "DETAIL KATA" CLR_RESET "%*s" CLR_BLUE "|\n" CLR_RESET, pad_left, "", pad_right, "");
+                printf(CLR_BLUE "  +");
                 for (int i = 0; i < box_width; i++) printf("-");
-                printf("+\n");
+                printf("+\n" CLR_RESET);
 
                 // Label width
                 int label_w = 13;
 
                 // Indonesian
-                printf("  | %-*s : %s\n", label_w - 2, "Indonesian", word->indonesian);
+                printf(CLR_BLUE "  |" CLR_RESET " " CLR_BOLD CLR_CYAN "%-*s" CLR_RESET " : " CLR_GREEN "%s" CLR_RESET "\n", label_w - 2, "Indonesian", word->indonesian);
                 // English
-                printf("  | %-*s : %s\n", label_w - 2, "English", word->english);
+                printf(CLR_BLUE "  |" CLR_RESET " " CLR_BOLD CLR_CYAN "%-*s" CLR_RESET " : " CLR_GREEN "%s" CLR_RESET "\n", label_w - 2, "English", word->english);
                 // POS
-                printf("  | %-*s : %s\n", label_w - 2, "POS", pos_to_string(word->pos));
+                printf(CLR_BLUE "  |" CLR_RESET " " CLR_BOLD CLR_CYAN "%-*s" CLR_RESET " : " CLR_MAGENTA "%s" CLR_RESET "\n", label_w - 2, "POS", pos_to_string(word->pos));
                 // Category
-                printf("  | %-*s : %s\n", label_w - 2, "Category", category_to_string(word->category));
+                printf(CLR_BLUE "  |" CLR_RESET " " CLR_BOLD CLR_CYAN "%-*s" CLR_RESET " : " CLR_MAGENTA "%s" CLR_RESET "\n", label_w - 2, "Category", category_to_string(word->category));
                 // Pronounce
-                printf("  | %-*s : %s\n", label_w - 2, "Pronounce", word->pronunciation);
+                printf(CLR_BLUE "  |" CLR_RESET " " CLR_BOLD CLR_CYAN "%-*s" CLR_RESET " : " CLR_YELLOW "%s" CLR_RESET "\n", label_w - 2, "Pronounce", word->pronunciation);
 
                 // Separator
-                printf("  +");
+                printf(CLR_BLUE "  +");
                 for (int i = 0; i < box_width; i++) printf("-");
-                printf("+\n");
+                printf("+\n" CLR_RESET);
 
                 // Definitions
-                printf("  | %-*s:\n", label_w - 2, "Definition(s)");
+                printf(CLR_BLUE "  |" CLR_RESET " " CLR_BOLD CLR_CYAN "%-*s" CLR_RESET ":\n", label_w - 2, "Definition(s)");
                 for (int i = 0; i < word->meaning_count; i++) {
-                    printf("  | %*d. %s\n", label_w - 3, i + 1, word->meanings[i].text);
+                    printf(CLR_BLUE "  |" CLR_RESET " %*d. " CLR_WHITE "%s" CLR_RESET "\n", label_w - 3, i + 1, word->meanings[i].text);
                 }
 
                 // Separator
-                printf("  +");
+                printf(CLR_BLUE "  +");
                 for (int i = 0; i < box_width; i++) printf("-");
-                printf("+\n");
+                printf("+\n" CLR_RESET);
 
                 // Example
-                printf("  | %-*s : %s\n", label_w - 2, "Example", word->example);
+                printf(CLR_BLUE "  |" CLR_RESET " " CLR_BOLD CLR_CYAN "%-*s" CLR_RESET " : " CLR_WHITE "%s" CLR_RESET "\n", label_w - 2, "Example", word->example);
 
-                printf("  +");
+                printf(CLR_BLUE "  +");
                 for (int i = 0; i < box_width; i++) printf("-");
-                printf("+\n");
+                printf("+\n" CLR_RESET);
 
                 printf("\n  [Tekan Enter untuk kembali ke daftar kata]\n");
                 printf("  Pilihan: ");
@@ -569,12 +560,12 @@ void dict_view_all(DictionaryManager* dict) {
 
                 continue;
             } else {
-                printf("\n  [Error] Nomor tidak valid. Pilih 1-%d\n", filtered_count);
+                printf("\n  " CLR_RED "[Error]" CLR_RESET " Nomor tidak valid. Pilih 1-%d\n", filtered_count);
             }
             continue;
         }
 
-        printf("\n  [Info] Pilihan tidak valid.\n");
+        printf("\n  " CLR_CYAN "[Info]" CLR_RESET " Pilihan tidak valid.\n");
     }
 
     free(all_words);
@@ -586,19 +577,26 @@ void dict_display_history(DictionaryManager* dict) {
     if (dict == NULL) return;
 
     printf("\n");
-    printf("  +========================================================================+\n");
-    printf("  |                       RIWAYAT PENCARIAN TERAKHIR                       |\n");
-    printf("  +========================================================================+\n");
+    printf(CLR_CYAN "  +========================================================================+\n");
+    printf("  |                       " CLR_BOLD CLR_YELLOW "RIWAYAT PENCARIAN TERAKHIR" CLR_RESET CLR_CYAN "                       |\n");
+    printf("  +========================================================================+\n" CLR_RESET);
 
     list_display(dict->search_history);
 
-    printf("  +========================================================================+\n");
+    printf(CLR_CYAN "  +========================================================================+\n" CLR_RESET);
+
+    printf("\n  [Tekan Enter untuk kembali ke menu utama]\n");
+    printf("  Pilihan: ");
+    char input[20];
+    if (fgets(input, sizeof(input), stdin) == NULL) {
+        // User pressed EOF, continue anyway
+    }
 }
 
 // Menampilkan kata acak (Word of the Day)
 void dict_word_of_day(DictionaryManager* dict) {
     if (dict == NULL || queue_is_empty(dict->word_queue)) {
-        printf("  [Error] Queue kosong!\n");
+        printf("  " CLR_RED "[Error]" CLR_RESET " Queue kosong!\n");
         return;
     }
 
@@ -615,11 +613,11 @@ void dict_word_of_day(DictionaryManager* dict) {
         dict_set_last_searched(dict, *word);
 
         printf("\n");
-        printf("  +========================================================================+\n");
-        printf("  |                           WORD OF THE DAY                              |\n");
-        printf("  +========================================================================+\n");
+        printf(CLR_CYAN "  +========================================================================+\n");
+        printf("  |                           " CLR_BOLD CLR_YELLOW "WORD OF THE DAY" CLR_RESET CLR_CYAN "                              |\n");
+        printf("  +========================================================================+\n" CLR_RESET);
         print_word_entry(word);
-        printf("  +========================================================================+\n");
+        printf(CLR_CYAN "  +========================================================================+\n" CLR_RESET);
 
         printf("\n  [Tekan Enter untuk kembali ke menu utama]\n");
         printf("  Pilihan: ");
@@ -638,7 +636,7 @@ int dict_undo(DictionaryManager* dict) {
     if (dict == NULL) return 0;
 
     if (stack_is_empty(dict->undo_stack)) {
-        printf("  [Info] Tidak ada aksi yang dapat di-undo.\n");
+        printf("  " CLR_CYAN "[Info]" CLR_RESET " Tidak ada aksi yang dapat di-undo.\n");
         printf("\n  [Tekan Enter untuk kembali ke menu utama]\n");
         printf("  Pilihan: ");
         char input[20];
@@ -650,7 +648,7 @@ int dict_undo(DictionaryManager* dict) {
 
     WordEntry word;
     if (stack_pop(dict->undo_stack, &word)) {
-        char action_type[20];
+        char action_type[40];
         char word_name[MAX_WORD_LEN];
 
         // Parse the marker prefix
@@ -675,19 +673,19 @@ int dict_undo(DictionaryManager* dict) {
         }
 
         // Perform the undo action
-        char success_msg[150];
+        char success_msg[200];
         if (strncmp(word.indonesian, "@ADD:", 5) == 0) {
             // Undo ADD = delete the word that was added
             dict_delete_word_no_undo(dict, word_name);
-            snprintf(success_msg, sizeof(success_msg), "  [Sukses] Undo berhasil! %s '%s' telah dihapus.", action_type, word_name);
+            snprintf(success_msg, sizeof(success_msg), "  " CLR_GREEN "[Sukses]" CLR_RESET " Undo berhasil! %s '" CLR_BOLD "%s" CLR_RESET "' telah dihapus.", action_type, word_name);
         } else if (strncmp(word.indonesian, "@UPDATE:", 8) == 0) {
             // Undo UPDATE = restore the old word
             dict_add_word(dict, word);
-            snprintf(success_msg, sizeof(success_msg), "  [Sukses] Undo berhasil! %s '%s' telah dikembalikan.", action_type, word_name);
+            snprintf(success_msg, sizeof(success_msg), "  " CLR_GREEN "[Sukses]" CLR_RESET " Undo berhasil! %s '" CLR_BOLD "%s" CLR_RESET "' telah dikembalikan.", action_type, word_name);
         } else if (strncmp(word.indonesian, "@DELETE:", 8) == 0) {
             // Undo DELETE = restore the deleted word
             dict_add_word(dict, word);
-            snprintf(success_msg, sizeof(success_msg), "  [Sukses] Undo berhasil! %s '%s' telah dikembalikan.", action_type, word_name);
+            snprintf(success_msg, sizeof(success_msg), "  " CLR_GREEN "[Sukses]" CLR_RESET " Undo berhasil! %s '" CLR_BOLD "%s" CLR_RESET "' telah dikembalikan.", action_type, word_name);
         } else {
             // Fallback
             if (bst_search(dict->bst_root, word.indonesian) != NULL) {
@@ -695,7 +693,7 @@ int dict_undo(DictionaryManager* dict) {
             } else {
                 dict_add_word(dict, word);
             }
-            snprintf(success_msg, sizeof(success_msg), "  [Sukses] Undo berhasil!");
+            snprintf(success_msg, sizeof(success_msg), "  " CLR_GREEN "[Sukses]" CLR_RESET " Undo berhasil!");
         }
 
         printf("%s\n", success_msg);
@@ -727,16 +725,16 @@ void dict_statistics(DictionaryManager* dict) {
     }
 
     printf("\n");
+    printf(CLR_CYAN "  +========================================================================+\n");
+    printf("  |                            " CLR_BOLD CLR_YELLOW "STATISTIK KAMUS" CLR_RESET CLR_CYAN "                             |\n");
     printf("  +========================================================================+\n");
-    printf("  |                            STATISTIK KAMUS                             |\n");
+    printf("  |  " CLR_BOLD CLR_WHITE "Total Kata" CLR_RESET CLR_CYAN "              : " CLR_GREEN "%d kata\n" CLR_CYAN, dict->total_words);
+    printf("  |  " CLR_BOLD CLR_WHITE "BST Nodes" CLR_RESET CLR_CYAN "               : %d nodes\n", bst_count(dict->bst_root));
+    printf("  |  " CLR_BOLD CLR_WHITE "Hash Table Size" CLR_RESET CLR_CYAN "         : %d entries\n", hash_size(dict->hash_english));
+    printf("  |  " CLR_BOLD CLR_WHITE "Search History Size" CLR_RESET CLR_CYAN "     : %d entries\n", dict->search_history->size);
+    printf("  |  " CLR_BOLD CLR_WHITE "Undo Stack Size" CLR_RESET CLR_CYAN "         : %d entries\n", dict->undo_stack->top + 1);
     printf("  +========================================================================+\n");
-    printf("  |  Total Kata              : %d kata\n", dict->total_words);
-    printf("  |  BST Nodes               : %d nodes\n", bst_count(dict->bst_root));
-    printf("  |  Hash Table Size         : %d entries\n", hash_size(dict->hash_english));
-    printf("  |  Search History Size     : %d entries\n", dict->search_history->size);
-    printf("  |  Undo Stack Size         : %d entries\n", dict->undo_stack->top + 1);
-    printf("  +========================================================================+\n");
-    printf("  |  DISTRIBUSI PART OF SPEECH:\n");
+    printf("  |  " CLR_BOLD CLR_YELLOW "DISTRIBUSI PART OF SPEECH:" CLR_RESET CLR_CYAN "\n");
     printf("  |    - Noun                : %d\n", pos_count[NOUN]);
     printf("  |    - Verb                : %d\n", pos_count[VERB]);
     printf("  |    - Adjective           : %d\n", pos_count[ADJECTIVE]);
@@ -745,12 +743,12 @@ void dict_statistics(DictionaryManager* dict) {
                                                   pos_count[CONJUNCTION] + pos_count[INTERJECTION] +
                                                   pos_count[DETERMINER]);
     printf("  +========================================================================+\n");
-    printf("  |  DISTRIBUSI KATEGORI     :\n");
+    printf("  |  " CLR_BOLD CLR_YELLOW "DISTRIBUSI KATEGORI     :" CLR_RESET CLR_CYAN "\n");
     printf("  |    - Everyday            : %d\n", cat_count[EVERYDAY]);
     printf("  |    - Formal              : %d\n", cat_count[FORMAL]);
     printf("  |    - Slang               : %d\n", cat_count[SLANG]);
     printf("  |    - Technical           : %d\n", cat_count[TECHNICAL]);
-    printf("  +========================================================================+\n");
+    printf("  +========================================================================+\n" CLR_RESET);
 
     printf("\n  [Tekan Enter untuk kembali ke menu utama]\n");
     printf("  Pilihan: ");
@@ -770,12 +768,12 @@ void dict_save_to_file(DictionaryManager* dict, const char* filename) {
 
     FILE* file = fopen(filename, "w");
     if (file == NULL) {
-        printf("  [Error] Gagal menyimpan ke file!\n");
+        printf("  " CLR_RED "[Error]" CLR_RESET " Gagal menyimpan ke file!\n");
         return;
     }
 
     save_bst_node(file, dict->bst_root);
     fclose(file);
 
-    printf("  [Sukses] Data disimpan ke '%s'\n", filename);
+    printf("  " CLR_GREEN "[Sukses]" CLR_RESET " Data disimpan ke '" CLR_BOLD "%s" CLR_RESET "'\n", filename);
 }

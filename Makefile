@@ -22,14 +22,13 @@ SRC_DIR = src
 SRC_FILES = $(SRC_DIR)/main.c \
             $(SRC_DIR)/dictionary.c \
             $(SRC_DIR)/data_structures.c \
-            $(SRC_DIR)/word_data.c
-
-# Object files
-OBJ_FILES = $(SRC_FILES:.c=.o)
+            $(SRC_DIR)/word_data.c \
+            $(SRC_DIR)/ui_utils.c
 
 # Header files for dependency checking
 HEADERS = $(SRC_DIR)/dictionary.h \
-          $(SRC_DIR)/data_structures.h
+          $(SRC_DIR)/data_structures.h \
+          $(SRC_DIR)/ui_utils.h
 
 # Directories
 BUILD_DIR = build

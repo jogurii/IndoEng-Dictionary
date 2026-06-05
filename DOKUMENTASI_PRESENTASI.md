@@ -8,7 +8,7 @@
 
 ### Apa itu IndoEng Dictionary?
 
-**IndoEng Dictionary** adalah aplikasi kamus dwibahasa Indonesia-Inggris berbasis teks (console) yang dibangun menggunakan bahasa pemrograman C. Aplikasi ini memiliki fitur lengkap untuk mengelola 150+ pasangan kata dengan berbagai operasi pencarian dan manipulasi data.
+**IndoEng Dictionary** adalah aplikasi kamus dwibahasa Indonesia-Inggris berbasis teks (console) yang dibangun menggunakan bahasa pemrograman C. Aplikasi ini memiliki fitur lengkap untuk mengelola 300+ pasangan kata dengan berbagai operasi pencarian dan manipulasi data.
 
 ### Spesifikasi Teknis
 
@@ -17,7 +17,7 @@
 | **Bahasa** | C (C99 Standard) |
 | **Platform** | Console/Terminal |
 | **Compiler** | GCC |
-| **Jumlah Kata** | ~150+ pasang kata Indonesia-Inggris |
+| **Jumlah Kata** | 300+ pasang kata Indonesia-Inggris |
 | **Data Structures** | 6 jenis struktur data |
 
 ---
@@ -34,8 +34,10 @@ indoeng-dictionary/
 │   ├── dictionary.h         # Header dictionary
 │   ├── data_structures.c    # Implementasi 6 struktur data
 │   ├── data_structures.h    # Deklarasi struktur data
-│   └── word_data.c          # Dataset 150+ kata
-└── bin/
+│   ├── ui_utils.c           # Utilitas tampilan UI
+│   ├── ui_utils.h           # Header utilitas UI
+│   └── word_data.c          # Dataset 300+ kata
+└── build/
     └── indoeng-dictionary.exe  # File executable
 ```
 
@@ -101,7 +103,6 @@ typedef struct {
     Queue* word_queue;            // Queue untuk word of the day
 
     int total_words;
-    int word_of_day_index;
     WordEntry last_searched;      // Kata terakhir yang dicari
     int has_last_searched;        // Flag apakah ada kata terakhir
 } DictionaryManager;
@@ -126,7 +127,6 @@ typedef struct {
 
 **Helper functions:**
 - `collect_all_words()` - Kumpulkan semua kata dari BST
-- `rebuild_trie()` - Rebuild Trie setelah update
 - `count_bst_stats()` - Hitung statistik
 - `save_bst_node()` - Simpan node BST ke file
 
@@ -342,8 +342,7 @@ unsigned int hash_function(const char* str) {
 | `hash_create()` | Buat hash table baru |
 | `hash_insert()` | Sisipkan kata |
 | `hash_search()` | Cari kata Inggris |
-| `hash_delete()` | Hapus kata (return WordEntry*) |
-| `hash_remove()` | Hapus kata (tanpa return) |
+| `hash_remove()` | Hapus kata (tanpa memory leak) |
 | `hash_destroy()` | Bebaskan memori |
 | `hash_size()` | Mendapatkan ukuran |
 
@@ -416,6 +415,8 @@ Root
 |--------|-----------|
 | `trie_create_node()` | Buat node baru |
 | `trie_insert()` | Sisipkan kata |
+| `trie_update()` | Update kata secara incremental (O(k)) |
+| `trie_delete_word()` | Hapus kata secara incremental (O(k)) |
 | `trie_search_prefix()` | Cari prefix node |
 | `trie_get_all_with_prefix()` | Ambil semua kata dengan prefix |
 | `trie_collect_all()` | Helper - rekursif collect semua kata |
@@ -1089,18 +1090,99 @@ Confirm    Enter      List View   Stack Pop
 
 ---
 
-## 11. Perbedaan Dokumentasi vs Kode
+### 2.5 `ui_utils.c` / `ui_utils.h` - Utilitas Tampilan UI
 
-Dokumentasi ini telah diperbarui untuk mencerminkan kode aktual. Beberapa perubahan penting:
+**Tugas utama:**
+- Menyediakan fungsi tampilan UI yang konsisten
+- Menghilangkan kode duplikat dalam tampilan box/table
 
-| Item | Dokumentasi Lama | Kode Aktual |
-|------|------------------|-------------|
-| UndoAction struct | Digunakan | **Dihapus** - menggunakan marker-based approach |
-| hash_remove() | Tidak ada | **Ditambahkan** - untuk update English |
-| bst_update_key() | Tidak ada | **Ditambahkan** - untuk update Indonesian |
-| trie_collect_all() | Tidak ada | **Ditambahkan** - helper untuk Trie |
-| trie_get_all_with_prefix() | Tidak ada | **Ditambahkan** - fungsi utama Trie |
-| Jumlah kata | ~300+ | ~150+ |
-| BST delete cases | 4 kasus | 3 kasus (doktrinasi digabung) |
+**Fungsi penting:**
+```c
+// Hitung lebar box optimal berdasarkan content
+int ui_calculate_box_width(int max_content_len, int min_width, int max_width);
+
+// Hitung padding untuk center title
+void ui_calculate_title_padding(int box_width, int title_len, int *pad_left, int *pad_right);
+
+// Tampilkan word entry dalam box terformat
+void ui_display_word_box(const WordEntry *word, const char *title);
+
+// Tampilkan word entry dalam format compact (untuk tabel)
+void ui_display_word_compact(const WordEntry *word, int index);
+
+// Hitung max field length dari word entry
+int ui_get_max_field_length(const WordEntry *word);
+
+// Cetak separator line
+void ui_print_separator(int width, const char *color);
+```
+
+**Benefit refactoring:**
+- Menghilangkan ~200 baris kode duplikat
+- Konsistensi tampilan di seluruh aplikasi
+- Mudah维护 dan diperluas
+
+---
+
+## 12. Riwayat Perubahan
+
+### v1.2 (Refactoring)
+| Item | Sebelum | Sesudah |
+|------|---------|---------|
+| Trie Update | O(n) full rebuild | O(k) incremental |
+| Trie Delete | O(n) full rebuild | O(k) incremental |
+| Hash Delete | Memory leak | Fixed - menggunakan hash_remove() |
+| UI Code | ~200 baris duplikat | Di-refactor ke ui_utils.c |
+| Unused Code | UndoAction struct, word_of_day_index | Dihapus |
+| Queue Operations | srand() dipanggil berulang | Single srand() di main.c |
+| rebuild_trie() | Digunakan | Dihapus - tidak diperlukan lagi |
+
+### Fitur Baru:
+- `trie_update()` - Update kata secara incremental
+- `trie_delete_word()` - Hapus kata secara incremental
+- `ui_display_word_box()` - Tampilan box unified
+- `ui_display_word_compact()` - Tampilan compact untuk tabel
+
+---
+
+## 13. Perbandingan Performa
+
+| Operasi | Kompleksitas Lama | Kompleksitas Baru | Peningkatan |
+|---------|------------------|-------------------|-------------|
+| Trie Update | O(n) rebuild semua | O(k) incremental | ~300x faster |
+| Trie Delete | O(n) rebuild semua | O(k) incremental | ~300x faster |
+| Hash Delete | Memory leak | Safe O(1) | Fixed |
+
+---
+
+## 14. Tips Presentasi (Updated)
+
+### Sesi Demonya:
+1. **Tunjukkan menu utama** - 11 opsi fitur + last searched word
+2. **Demo View All Words** - Pagination, filter A-Z, pilih kata (tekan 1-N)
+3. **Demo pencarian Indonesia** - Gunakan BST, tunjukkan proses
+4. **Demo pencarian Inggris** - Gunakan Hash, tunjukkan O(1)
+5. **Demo autocomplete** - Ketik "ma", tunjukkan semua kata "ma..."
+6. **Demo Add Word** - Validasi kata sudah ada, tekan Enter
+7. **Demo Update Word** - Pilih field satu per satu, tekan Enter, simbol `-`
+8. **Demo Delete Word** - Konfirmasi, sukses tekan Enter
+9. **Demo Word of the Day** - Kata acak, tekan Enter
+10. **Demo undo** - Add/Update/Delete, lalu undo, kata kembali/dihapus
+11. **Demo statistics** - Tunjukkan distribusi POS & Category
+
+### Highlight Refactoring:
+- **Optimasi Trie:** Jelaskan bahwa sebelum refactoring, setiap update/delete melakukan rebuild trie O(n). Sekarang menggunakan incremental update O(k).
+- **UI Refactoring:** Tunjukkan bahwa kode tampilan duplikat telah di-refactor ke ui_utils.c
+- **Memory Safety:** Jelaskan bahwa hash_delete() yang memiliki memory leak telah diperbaiki
+
+### Slide Penjelasan:
+1. **Slide 1:** Judul & overview project
+2. **Slide 2:** Struktur file project (termasuk ui_utils.c/h)
+3. **Slide 3-8:** Satu slide per struktur data
+4. **Slide 9:** Diagram integrasi + Undo mechanism
+5. **Slide 10:** Optimasi & Refactoring (NEW!)
+6. **Slide 11:** Demo & Q&A
+
+---
 
 ---
