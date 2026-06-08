@@ -7,7 +7,7 @@
 #include <time.h>
 #include <ctype.h>
 
-// Warna untuk Terminal UI (ANSI Escape Codes)
+// Terminal UI Colors
 #define CLR_RED     "\x1b[1;31m"
 #define CLR_GREEN   "\x1b[1;32m"
 #define CLR_YELLOW  "\x1b[1;33m"
@@ -18,17 +18,17 @@
 #define CLR_RESET   "\x1b[0m"
 #define CLR_BOLD    "\x1b[1m"
 
-// Case-insensitive string comparison mapping for Windows/POSIX strict C99 compliance
+// Case-insensitive string compare
 int strcasecmp(const char *s1, const char *s2);
 
-// Konstanta ukuran
+// Size constants
 #define MAX_WORD_LEN 100
 #define MAX_DEF_LEN 500
 #define MAX_EXAMPLE_LEN 300
 #define MAX_CATEGORY_LEN 50
 #define MAX_MEANINGS 5
 
-// Enum Part of Speech
+// POS enum
 typedef enum {
     NOUN,
     VERB,
@@ -41,7 +41,7 @@ typedef enum {
     DETERMINER
 } PartOfSpeech;
 
-// Enum Kategori Kata
+// Category enum
 typedef enum {
     EVERYDAY,
     FORMAL,
@@ -49,12 +49,12 @@ typedef enum {
     TECHNICAL
 } WordCategory;
 
-// Struct Meaning
+// Meaning struct
 typedef struct {
     char text[MAX_DEF_LEN];
 } Meaning;
 
-// Struct WordEntry
+// WordEntry struct
 typedef struct {
     char indonesian[MAX_WORD_LEN];
     char english[MAX_WORD_LEN];
@@ -68,7 +68,7 @@ typedef struct {
 } WordEntry;
 
 // ============================================================================
-// BST - Penyimpanan kata secara alfabetis
+// BST: Alphabetical storage
 // ============================================================================
 
 typedef struct BSTNode {
@@ -87,7 +87,7 @@ void bst_destroy(BSTNode* root);
 int bst_count(BSTNode* root);
 
 // ============================================================================
-// HASH TABLE - Pencarian O(1) berdasarkan kata Inggris
+// Hash Table: English word search
 // ============================================================================
 
 #define HASH_TABLE_SIZE 1000
@@ -112,7 +112,7 @@ void hash_destroy(HashTable* ht);
 int hash_size(HashTable* ht);
 
 // ============================================================================
-// TRIE - Autocomplete dan pencarian prefix
+// Trie: Autocomplete & prefix search
 // ============================================================================
 
 #define ALPHABET_SIZE 26
@@ -133,7 +133,7 @@ void trie_delete_word(TrieNode* root, const char* word);
 void trie_destroy(TrieNode* root);
 
 // ============================================================================
-// LINKED LIST - History pencarian dan undo
+// Linked List: Search history & undo
 // ============================================================================
 
 typedef struct ListNode {
@@ -158,7 +158,7 @@ void list_destroy(LinkedList* list);
 void list_display(LinkedList* list);
 
 // ============================================================================
-// STACK - Operasi undo dan navigasi history
+// Stack: Undo operations
 // ============================================================================
 
 #define MAX_STACK_SIZE 100
@@ -178,7 +178,7 @@ int stack_is_full(Stack* s);
 void stack_destroy(Stack* s);
 
 // ============================================================================
-// QUEUE - Word of the day
+// Queue: Word of the day
 // ============================================================================
 
 #define MAX_QUEUE_SIZE 1000
@@ -202,7 +202,7 @@ WordEntry* queue_get_random(Queue* q);
 void queue_shuffle(Queue* q);
 
 // ============================================================================
-// HELPER FUNCTIONS
+// Helper functions
 // ============================================================================
 
 const char* pos_to_string(PartOfSpeech pos);

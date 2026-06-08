@@ -1,14 +1,11 @@
-/**
- * @file ui_utils.c
- * @brief UI utilities implementation for consistent console display formatting
- */
+
 #include "ui_utils.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
 // ============================================================================
-// IMPLEMENTATION
+// Implementation
 // ============================================================================
 
 int ui_calculate_box_width(int max_content_len, int min_width, int max_width) {

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "dictionary.h"
 
-// Struct untuk dataset agar lebih rapi
+// Dataset struct
 typedef struct {
     const char* indonesian;
     const char* english;
@@ -12,7 +12,7 @@ typedef struct {
     WordCategory category;
 } RawWordData;
 
-// Memuat data kata awal ke dictionary
+// Load initial data
 void dict_load_initial_data(DictionaryManager* dict) {
     if (dict == NULL) return;
 

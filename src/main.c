@@ -15,7 +15,7 @@
 #endif
 
 // ============================================================================
-// DEKLARASI FUNGSI STATIC
+// Static declarations
 // ============================================================================
 
 static void display_main_menu(void);
@@ -31,10 +31,10 @@ static WordCategory get_category_from_input(void);
 static char *get_string_input(char *prompt, char *buffer, int max_len);
 
 // ============================================================================
-// FUNGSI UTAMA
+// Main function
 // ============================================================================
 
-// Helper function to print last searched word at top of menu
+// Print last searched
 static void print_last_searched_if_exists(DictionaryManager *dict) {
   WordEntry *last = dict_get_last_searched(dict);
   if (last != NULL) {
@@ -184,10 +184,10 @@ int main(void) {
 }
 
 // ============================================================================
-// TAMPILAN MENU
+// Menu display
 // ============================================================================
 
-// Menampilkan menu utama aplikasi
+// Display main menu
 static void display_main_menu(void) {
   printf("\n");
   printf(CLR_CYAN
@@ -242,17 +242,17 @@ static void display_main_menu(void) {
 }
 
 // ============================================================================
-// FUNGSI INPUT
+// Input functions
 // ============================================================================
 
-// Membersihkan buffer input
+// Clear input buffer
 static void clear_input_buffer(void) {
   int c;
   while ((c = getchar()) != '\n' && c != EOF)
     ;
 }
 
-// Meminta input string dari user
+// Get string input
 static char *get_string_input(char *prompt, char *buffer, int max_len) {
   printf("  %s: ", prompt);
   if (fgets(buffer, max_len, stdin) != NULL) {
@@ -268,7 +268,7 @@ static char *get_string_input(char *prompt, char *buffer, int max_len) {
   return NULL;
 }
 
-// Meminta input Part of Speech
+// Get POS input
 static PartOfSpeech get_pos_from_input(void) {
   printf("\n  Part of Speech:\n");
   printf("    0 - Noun\n");
@@ -313,7 +313,7 @@ static PartOfSpeech get_pos_from_input(void) {
   }
 }
 
-// Meminta input Kategori kata
+// Get category input
 static WordCategory get_category_from_input(void) {
   printf("\n  Category:\n");
   printf("    0 - Everyday\n");
@@ -344,10 +344,10 @@ static WordCategory get_category_from_input(void) {
 }
 
 // ============================================================================
-// HANDLER PENCARIAN
+// Search handlers
 // ============================================================================
 
-// Handler pencarian kata Indonesia (BST)
+// Handle Indonesian search
 static void handle_search_indonesian(DictionaryManager *dict) {
   char input[MAX_WORD_LEN];
   char choice[20];
@@ -438,7 +438,7 @@ static void handle_search_indonesian(DictionaryManager *dict) {
   }
 }
 
-// Handler pencarian kata Inggris (Hash Table)
+// Handle English search
 static void handle_search_english(DictionaryManager *dict) {
   char input[MAX_WORD_LEN];
   char choice[20];
@@ -528,7 +528,7 @@ static void handle_search_english(DictionaryManager *dict) {
   }
 }
 
-// Handler pencarian prefix (autocomplete via Trie)
+// Handle prefix search
 static void handle_prefix_search(DictionaryManager *dict) {
   char input[MAX_WORD_LEN];
   char nav_input[20];
@@ -778,10 +778,10 @@ static void handle_prefix_search(DictionaryManager *dict) {
 }
 
 // ============================================================================
-// HANDLER CRUD
+// CRUD handlers
 // ============================================================================
 
-// Handler menambah kata baru
+// Handle add word
 static void handle_add_word(DictionaryManager *dict) {
   char indonesian[MAX_WORD_LEN];
   char english[MAX_WORD_LEN];

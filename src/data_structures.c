@@ -5,15 +5,14 @@
 #include <string.h>
 #include <time.h>
 
-// Deklarasi fungsi komparasi string case-insensitive untuk linter IDE
+// Case-insensitive string compare
 int strcasecmp(const char *s1, const char *s2);
 
-
 // ============================================================================
-// HELPER: Konversi Enum ke String
+// Helpers: Enum to string
 // ============================================================================
 
-// Mengubah PartOfSpeech menjadi string
+// Convert POS to string
 const char *pos_to_string(PartOfSpeech pos) {
   switch (pos) {
   case NOUN:
@@ -39,7 +38,7 @@ const char *pos_to_string(PartOfSpeech pos) {
   }
 }
 
-// Mengubah WordCategory menjadi string
+// Convert Category to string
 const char *category_to_string(WordCategory cat) {
   switch (cat) {
   case EVERYDAY:
@@ -55,7 +54,7 @@ const char *category_to_string(WordCategory cat) {
   }
 }
 
-// Menampilkan detail satu kata
+// Print word details
 void print_word_entry(WordEntry *word) {
   if (word == NULL)
     return;
@@ -77,7 +76,7 @@ void print_word_entry(WordEntry *word) {
   printf("  =============================================================\n");
 }
 
-// Membuat instance WordEntry baru
+// Create WordEntry
 WordEntry create_word_entry(const char *indonesian, const char *english,
                             PartOfSpeech pos, const char *definition,
                             const char *example, const char *pronunciation,
@@ -119,10 +118,10 @@ WordEntry create_word_entry(const char *indonesian, const char *english,
 }
 
 // ============================================================================
-// BINARY SEARCH TREE (BST)
+// BST Implementation
 // ============================================================================
 
-// Membuat node BST baru
+// Create BST node
 BSTNode *bst_create_node(WordEntry word) {
   BSTNode *node = (BSTNode *)malloc(sizeof(BSTNode));
   if (node == NULL) {
@@ -135,7 +134,7 @@ BSTNode *bst_create_node(WordEntry word) {
   return node;
 }
 
-// Menyisipkan kata ke BST
+// Insert word to BST
 BSTNode *bst_insert(BSTNode *root, WordEntry word) {
   if (root == NULL) {
     return bst_create_node(word);
@@ -154,7 +153,7 @@ BSTNode *bst_insert(BSTNode *root, WordEntry word) {
   return root;
 }
 
-// Mencari kata dalam BST
+// Search word in BST
 BSTNode *bst_search(BSTNode *root, const char *indonesian) {
   if (root == NULL) {
     return NULL;
@@ -171,7 +170,7 @@ BSTNode *bst_search(BSTNode *root, const char *indonesian) {
   }
 }
 
-// Mencari node dengan nilai terkecil
+// Find min node
 BSTNode *bst_find_min(BSTNode *node) {
   BSTNode *current = node;
   while (current && current->left != NULL) {
@@ -180,7 +179,7 @@ BSTNode *bst_find_min(BSTNode *node) {
   return current;
 }
 
-// Update key (indonesian) di BST
+// Update BST key
 void bst_update_key(BSTNode *root, const char *old_key, const char *new_key) {
   if (root == NULL)
     return;
@@ -197,7 +196,7 @@ void bst_update_key(BSTNode *root, const char *old_key, const char *new_key) {
   }
 }
 
-// Menghapus kata dari BST
+// Delete from BST
 BSTNode *bst_delete(BSTNode *root, const char *indonesian) {
   if (root == NULL) {
     return NULL;
@@ -228,7 +227,7 @@ BSTNode *bst_delete(BSTNode *root, const char *indonesian) {
   return root;
 }
 
-// Traversing in-order BST
+// In-order traversal
 void bst_inorder(BSTNode *root, void (*callback)(WordEntry)) {
   if (root == NULL)
     return;
@@ -238,7 +237,7 @@ void bst_inorder(BSTNode *root, void (*callback)(WordEntry)) {
   bst_inorder(root->right, callback);
 }
 
-// Membebaskan memori BST
+// Free BST memory
 void bst_destroy(BSTNode *root) {
   if (root == NULL)
     return;
@@ -247,7 +246,7 @@ void bst_destroy(BSTNode *root) {
   free(root);
 }
 
-// Menghitung jumlah node BST
+// Count BST nodes
 int bst_count(BSTNode *root) {
   if (root == NULL)
     return 0;
@@ -255,10 +254,10 @@ int bst_count(BSTNode *root) {
 }
 
 // ============================================================================
-// HASH TABLE
+// Hash Table Implementation
 // ============================================================================
 
-// Fungsi hash untuk string
+// Hash function
 unsigned int hash_function(const char *str) {
   unsigned int hash = 0;
   while (*str) {
@@ -268,7 +267,7 @@ unsigned int hash_function(const char *str) {
   return hash % HASH_TABLE_SIZE;
 }
 
-// Membuat hash table baru
+// Create hash table
 HashTable *hash_create() {
   HashTable *ht = (HashTable *)malloc(sizeof(HashTable));
   if (ht == NULL) {
@@ -283,7 +282,7 @@ HashTable *hash_create() {
   return ht;
 }
 
-// Menyisipkan kata ke hash table
+// Insert to hash table
 void hash_insert(HashTable *ht, WordEntry word) {
   unsigned int index = hash_function(word.english);
 
@@ -308,7 +307,7 @@ void hash_insert(HashTable *ht, WordEntry word) {
   ht->size++;
 }
 
-// Mencari kata dalam hash table
+// Search hash table
 WordEntry *hash_search(HashTable *ht, const char *english) {
   unsigned int index = hash_function(english);
 
@@ -323,10 +322,10 @@ WordEntry *hash_search(HashTable *ht, const char *english) {
   return NULL;
 }
 
-// Mendapatkan ukuran hash table
+// Get hash table size
 int hash_size(HashTable *ht) { return ht ? ht->size : 0; }
 
-// Menghapus kata dari hash table (helper for iteration, no return value needed)
+// Delete node from hash table
 static void hash_delete_node(HashTable *ht, const char *english) {
   if (ht == NULL || english == NULL)
     return;
@@ -351,12 +350,12 @@ static void hash_delete_node(HashTable *ht, const char *english) {
   }
 }
 
-// Menghapus entry dari hash table berdasarkan english
+// Remove from hash table
 void hash_remove(HashTable *ht, const char *english) {
     hash_delete_node(ht, english);
 }
 
-// Membebaskan memori hash table
+// Free hash table memory
 void hash_destroy(HashTable *ht) {
   if (ht == NULL)
     return;
@@ -373,10 +372,10 @@ void hash_destroy(HashTable *ht) {
 }
 
 // ============================================================================
-// TRIE (PREFIX TREE)
+// Trie Implementation
 // ============================================================================
 
-// Membuat node Trie baru
+// Create Trie node
 TrieNode *trie_create_node(void) {
   TrieNode *node = (TrieNode *)malloc(sizeof(TrieNode));
   if (node == NULL) {
@@ -394,7 +393,7 @@ TrieNode *trie_create_node(void) {
   return node;
 }
 
-// Menyisipkan kata ke Trie
+// Insert to Trie
 void trie_insert(TrieNode *root, const char *word, WordEntry entry) {
   TrieNode *current = root;
 
@@ -419,7 +418,7 @@ void trie_insert(TrieNode *root, const char *word, WordEntry entry) {
   current->word = entry;
 }
 
-// Helper: navigate to node for a given word
+// Navigate Trie node
 static TrieNode* trie_navigate_to_word(TrieNode* root, const char* word) {
     TrieNode* current = root;
     while (*word) {
@@ -437,8 +436,8 @@ static TrieNode* trie_navigate_to_word(TrieNode* root, const char* word) {
     return current;
 }
 
-// Update a word in the trie (delete old, insert new)
-// More efficient than full rebuild: O(k) where k is word length
+// Update Trie word
+
 void trie_update(TrieNode* root, const char* old_word, const char* new_word, WordEntry entry) {
     if (root == NULL) return;
 
@@ -453,8 +452,8 @@ void trie_update(TrieNode* root, const char* old_word, const char* new_word, Wor
     trie_insert(root, new_word, entry);
 }
 
-// Delete a word from the trie
-// Only marks the node as not end-of-word (preserves structure for prefix sharing)
+// Delete Trie word
+
 void trie_delete_word(TrieNode* root, const char* word) {
     if (root == NULL) return;
 
@@ -465,7 +464,7 @@ void trie_delete_word(TrieNode* root, const char* word) {
     }
 }
 
-// Mencari prefix dalam Trie
+// Search prefix in Trie
 TrieNode *trie_search_prefix(TrieNode *root, const char *prefix) {
   TrieNode *current = root;
 
@@ -487,7 +486,7 @@ TrieNode *trie_search_prefix(TrieNode *root, const char *prefix) {
   return current;
 }
 
-// Mengumpulkan semua kata dari node Trie
+// Collect words from Trie
 void trie_collect_all(TrieNode *node, WordEntry **results, int *count,
                       int *capacity) {
   if (node == NULL)
@@ -508,7 +507,7 @@ void trie_collect_all(TrieNode *node, WordEntry **results, int *count,
   }
 }
 
-// Mendapatkan semua kata dengan prefix tertentu
+// Get words by prefix
 void trie_get_all_with_prefix(TrieNode *root, const char *prefix,
                               WordEntry **results, int *count) {
   TrieNode *prefix_node = trie_search_prefix(root, prefix);
@@ -526,7 +525,7 @@ void trie_get_all_with_prefix(TrieNode *root, const char *prefix,
   trie_collect_all(prefix_node, results, count, &capacity);
 }
 
-// Membebaskan memori Trie
+// Free Trie memory
 void trie_destroy(TrieNode *root) {
   if (root == NULL)
     return;
@@ -539,10 +538,10 @@ void trie_destroy(TrieNode *root) {
 }
 
 // ============================================================================
-// LINKED LIST
+// Linked List Implementation
 // ============================================================================
 
-// Membuat linked list baru
+// Create linked list
 LinkedList *list_create(int max_size) {
   LinkedList *list = (LinkedList *)malloc(sizeof(LinkedList));
   if (list == NULL) {
@@ -558,7 +557,7 @@ LinkedList *list_create(int max_size) {
   return list;
 }
 
-// Menyisipkan kata di awal list
+// Insert at front
 void list_insert_front(LinkedList *list, WordEntry word) {
   if (list == NULL)
     return;
@@ -624,7 +623,7 @@ void list_insert_front(LinkedList *list, WordEntry word) {
   list->size++;
 }
 
-// Menyisipkan kata di akhir list
+// Insert at back
 void list_insert_back(LinkedList *list, WordEntry word) {
   if (list == NULL)
     return;
@@ -664,7 +663,7 @@ void list_insert_back(LinkedList *list, WordEntry word) {
   list->size++;
 }
 
-// Mencari kata dalam list
+// Search in list
 WordEntry *list_search(LinkedList *list, const char *indonesian) {
   if (list == NULL)
     return NULL;
@@ -680,7 +679,7 @@ WordEntry *list_search(LinkedList *list, const char *indonesian) {
   return NULL;
 }
 
-// Menghapus kata dari list
+// Remove from list
 void list_remove(LinkedList *list, const char *indonesian) {
   if (list == NULL)
     return;
@@ -708,7 +707,7 @@ void list_remove(LinkedList *list, const char *indonesian) {
   }
 }
 
-// Menampilkan isi list
+// Display list
 void list_display(LinkedList *list) {
   if (list == NULL || list->size == 0) {
     printf("  [Kosong]\n");
@@ -725,7 +724,7 @@ void list_display(LinkedList *list) {
   }
 }
 
-// Membebaskan memori list
+// Free list memory
 void list_destroy(LinkedList *list) {
   if (list == NULL)
     return;
@@ -741,10 +740,10 @@ void list_destroy(LinkedList *list) {
 }
 
 // ============================================================================
-// STACK
+// Stack Implementation
 // ============================================================================
 
-// Membuat stack baru
+// Create stack
 Stack *stack_create(int max_size) {
   Stack *s = (Stack *)malloc(sizeof(Stack));
   if (s == NULL) {
@@ -758,7 +757,7 @@ Stack *stack_create(int max_size) {
   return s;
 }
 
-// Push elemen ke stack
+// Stack push
 int stack_push(Stack *s, WordEntry entry) {
   if (s == NULL || stack_is_full(s)) {
     return 0;
@@ -768,7 +767,7 @@ int stack_push(Stack *s, WordEntry entry) {
   return 1;
 }
 
-// Pop elemen dari stack
+// Stack pop
 int stack_pop(Stack *s, WordEntry *entry) {
   if (s == NULL || stack_is_empty(s)) {
     return 0;
@@ -778,7 +777,7 @@ int stack_pop(Stack *s, WordEntry *entry) {
   return 1;
 }
 
-// Lihat elemen teratas stack
+// Stack peek
 int stack_peek(Stack *s, WordEntry *entry) {
   if (s == NULL || stack_is_empty(s)) {
     return 0;
@@ -788,13 +787,13 @@ int stack_peek(Stack *s, WordEntry *entry) {
   return 1;
 }
 
-// Cek apakah stack kosong
+// Check empty stack
 int stack_is_empty(Stack *s) { return s == NULL || s->top == -1; }
 
-// Cek apakah stack penuh
+// Check full stack
 int stack_is_full(Stack *s) { return s != NULL && s->top >= s->max_size - 1; }
 
-// Membebaskan memori stack
+// Free stack memory
 void stack_destroy(Stack *s) {
   if (s != NULL) {
     free(s);
@@ -802,10 +801,10 @@ void stack_destroy(Stack *s) {
 }
 
 // ============================================================================
-// QUEUE
+// Queue Implementation
 // ============================================================================
 
-// Membuat queue baru
+// Create queue
 Queue *queue_create(int max_size) {
   Queue *q = (Queue *)malloc(sizeof(Queue));
   if (q == NULL) {
@@ -821,7 +820,7 @@ Queue *queue_create(int max_size) {
   return q;
 }
 
-// Enqueue elemen ke queue
+// Queue enqueue
 int queue_enqueue(Queue *q, WordEntry entry) {
   if (q == NULL || queue_is_full(q)) {
     return 0;
@@ -834,7 +833,7 @@ int queue_enqueue(Queue *q, WordEntry entry) {
   return 1;
 }
 
-// Dequeue elemen dari queue
+// Queue dequeue
 int queue_dequeue(Queue *q, WordEntry *entry) {
   if (q == NULL || queue_is_empty(q)) {
     return 0;
@@ -847,7 +846,7 @@ int queue_dequeue(Queue *q, WordEntry *entry) {
   return 1;
 }
 
-// Lihat elemen terdepan queue
+// Queue peek
 int queue_peek(Queue *q, WordEntry *entry) {
   if (q == NULL || queue_is_empty(q)) {
     return 0;
@@ -857,20 +856,20 @@ int queue_peek(Queue *q, WordEntry *entry) {
   return 1;
 }
 
-// Cek apakah queue kosong
+// Check empty queue
 int queue_is_empty(Queue *q) { return q == NULL || q->size == 0; }
 
-// Cek apakah queue penuh
+// Check full queue
 int queue_is_full(Queue *q) { return q != NULL && q->size >= q->max_size; }
 
-// Membebaskan memori queue
+// Free queue memory
 void queue_destroy(Queue *q) {
   if (q != NULL) {
     free(q);
   }
 }
 
-// Mendapatkan kata acak dari queue
+// Get random from queue
 WordEntry *queue_get_random(Queue *q) {
   if (q == NULL || q->size == 0) {
     return NULL;
@@ -883,7 +882,7 @@ WordEntry *queue_get_random(Queue *q) {
   return &(q->entries[actual_index]);
 }
 
-// Mengacak elemen queue (Fisher-Yates shuffle)
+// Shuffle queue
 void queue_shuffle(Queue *q) {
   if (q == NULL || q->size <= 1)
     return;
