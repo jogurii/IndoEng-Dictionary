@@ -4,10 +4,10 @@
 #include "dictionary.h"
 
 // ============================================================================
-// Helper functions
+// Fungsi helper
 // ============================================================================
 
-// Collect BST to array
+// Kumpulkan BST ke array
 static void collect_all_words(BSTNode* node, WordEntry** results, int* count) {
     if (node == NULL) return;
 
@@ -17,7 +17,7 @@ static void collect_all_words(BSTNode* node, WordEntry** results, int* count) {
     collect_all_words(node->right, results, count);
 }
 
-// Calc BST stats
+// Hitung statistik BST
 static void count_bst_stats(BSTNode* n, int* pos_count, int* cat_count) {
     if (n == NULL) return;
     int pos_idx = (int)n->word.pos;
@@ -28,7 +28,7 @@ static void count_bst_stats(BSTNode* n, int* pos_count, int* cat_count) {
     count_bst_stats(n->right, pos_count, cat_count);
 }
 
-// Save BST node
+// Simpan node BST
 static void save_bst_node(FILE* file, BSTNode* n) {
     if (n == NULL) return;
 
@@ -49,7 +49,7 @@ static void save_bst_node(FILE* file, BSTNode* n) {
 // Init & Cleanup
 // ============================================================================
 
-// Create DictionaryManager
+// Buat DictionaryManager
 DictionaryManager* dict_create(void) {
     DictionaryManager* dict = (DictionaryManager*)malloc(sizeof(DictionaryManager));
 
@@ -72,7 +72,7 @@ DictionaryManager* dict_create(void) {
     return dict;
 }
 
-// Free DictionaryManager
+// Bebaskan DictionaryManager
 void dict_destroy(DictionaryManager* dict) {
     if (dict == NULL) return;
 
@@ -87,10 +87,10 @@ void dict_destroy(DictionaryManager* dict) {
 }
 
 // ============================================================================
-// CRUD operations OPERATIONS
+// Operasi CRUD OPERATIONS
 // ============================================================================
 
-// Add word
+// Tambah kata
 int dict_add_word(DictionaryManager* dict, WordEntry word) {
     if (dict == NULL) return 0;
 
@@ -116,7 +116,7 @@ int dict_add_word(DictionaryManager* dict, WordEntry word) {
     return 1;
 }
 
-// Update word
+// Update kata
 int dict_update_word(DictionaryManager* dict, const char* indonesian, WordEntry new_word) {
     if (dict == NULL || indonesian == NULL) return 0;
 
@@ -149,7 +149,7 @@ int dict_update_word(DictionaryManager* dict, const char* indonesian, WordEntry 
     return 1;
 }
 
-// Delete word
+// Hapus kata
 int dict_delete_word(DictionaryManager* dict, const char* indonesian) {
     if (dict == NULL || indonesian == NULL) return 0;
 
@@ -181,7 +181,7 @@ int dict_delete_word(DictionaryManager* dict, const char* indonesian) {
     return 1;
 }
 
-// Delete word (no undo)
+// Hapus kata (tanpa undo)
 int dict_delete_word_no_undo(DictionaryManager* dict, const char* indonesian) {
     if (dict == NULL || indonesian == NULL) return 0;
 
@@ -203,7 +203,7 @@ int dict_delete_word_no_undo(DictionaryManager* dict, const char* indonesian) {
     return 1;
 }
 
-// Search Indonesian (BST)
+// Cari kata Indonesia (BST)
 WordEntry* dict_search_indonesian(DictionaryManager* dict, const char* indonesian) {
     if (dict == NULL || indonesian == NULL) return NULL;
 
@@ -216,7 +216,7 @@ WordEntry* dict_search_indonesian(DictionaryManager* dict, const char* indonesia
     return NULL;
 }
 
-// Search English (Hash Table)
+// Cari kata Inggris (Hash Table)
 WordEntry* dict_search_english(DictionaryManager* dict, const char* english) {
     if (dict == NULL || english == NULL) return NULL;
 
@@ -229,7 +229,7 @@ WordEntry* dict_search_english(DictionaryManager* dict, const char* english) {
     return NULL;
 }
 
-// Search prefix (Trie)
+// Cari prefix (Trie)
 WordEntry* dict_search_prefix(DictionaryManager* dict, const char* prefix, int* count) {
     if (dict == NULL || prefix == NULL || count == NULL) return NULL;
 
@@ -241,30 +241,30 @@ WordEntry* dict_search_prefix(DictionaryManager* dict, const char* prefix, int* 
     return results;
 }
 
-// Add to history
+// Tambah ke riwayat
 void dict_add_to_history(DictionaryManager* dict, WordEntry word) {
     if (dict == NULL) return;
     list_insert_front(dict->search_history, word);
 }
 
-// Set last searched
+// Set terakhir dicari
 void dict_set_last_searched(DictionaryManager* dict, WordEntry word) {
     if (dict == NULL) return;
     dict->last_searched = word;
     dict->has_last_searched = 1;
 }
 
-// Get last searched
+// Ambil terakhir dicari
 WordEntry* dict_get_last_searched(DictionaryManager* dict) {
     if (dict == NULL || !dict->has_last_searched) return NULL;
     return &dict->last_searched;
 }
 
 // ============================================================================
-// View Operations
+// Operasi View
 // ============================================================================
 
-// View all words
+// Tampilkan semua kata
 void dict_view_all(DictionaryManager* dict) {
     if (dict == NULL || dict->total_words == 0) {
         printf("\n  " CLR_CYAN "[Info]" CLR_RESET " Dictionary kosong!\n");
@@ -572,7 +572,7 @@ void dict_view_all(DictionaryManager* dict) {
     free(filtered_words);
 }
 
-// Display history
+// Tampilkan riwayat
 void dict_display_history(DictionaryManager* dict) {
     if (dict == NULL) return;
 
@@ -628,10 +628,10 @@ void dict_word_of_day(DictionaryManager* dict) {
 }
 
 // ============================================================================
-// Undo Operations
+// Operasi Undo
 // ============================================================================
 
-// Undo last action
+// Undo aksi terakhir
 int dict_undo(DictionaryManager* dict) {
     if (dict == NULL) return 0;
 
@@ -675,15 +675,15 @@ int dict_undo(DictionaryManager* dict) {
         // Perform the undo action
         char success_msg[200];
         if (strncmp(word.indonesian, "@ADD:", 5) == 0) {
-            // Undo operations ADD = delete the word that was added
+            // Operasi Undo ADD = delete the word that was added
             dict_delete_word_no_undo(dict, word_name);
             snprintf(success_msg, sizeof(success_msg), "  " CLR_GREEN "[Sukses]" CLR_RESET " Undo berhasil! %s '" CLR_BOLD "%s" CLR_RESET "' telah dihapus.", action_type, word_name);
         } else if (strncmp(word.indonesian, "@UPDATE:", 8) == 0) {
-            // Undo operations UPDATE = restore the old word
+            // Operasi Undo UPDATE = restore the old word
             dict_add_word(dict, word);
             snprintf(success_msg, sizeof(success_msg), "  " CLR_GREEN "[Sukses]" CLR_RESET " Undo berhasil! %s '" CLR_BOLD "%s" CLR_RESET "' telah dikembalikan.", action_type, word_name);
         } else if (strncmp(word.indonesian, "@DELETE:", 8) == 0) {
-            // Undo operations DELETE = restore the deleted word
+            // Operasi Undo DELETE = restore the deleted word
             dict_add_word(dict, word);
             snprintf(success_msg, sizeof(success_msg), "  " CLR_GREEN "[Sukses]" CLR_RESET " Undo berhasil! %s '" CLR_BOLD "%s" CLR_RESET "' telah dikembalikan.", action_type, word_name);
         } else {
@@ -710,10 +710,10 @@ int dict_undo(DictionaryManager* dict) {
 }
 
 // ============================================================================
-// Statistics
+// Statistik
 // ============================================================================
 
-// Display statistics
+// Tampilkan statistik
 void dict_statistics(DictionaryManager* dict) {
     if (dict == NULL) return;
 
@@ -759,10 +759,10 @@ void dict_statistics(DictionaryManager* dict) {
 }
 
 // ============================================================================
-// Data Persistence
+// Persistensi Data
 // ============================================================================
 
-// Save dict to file
+// Simpan kamus ke file
 void dict_save_to_file(DictionaryManager* dict, const char* filename) {
     if (dict == NULL || filename == NULL) return;
 

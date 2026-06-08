@@ -5,7 +5,7 @@
 #include "data_structures.h"
 
 // ============================================================================
-// UI Utilities
+// Utilitas UI
 // ============================================================================
 
 int ui_calculate_box_width(int max_content_len, int min_width, int max_width);
